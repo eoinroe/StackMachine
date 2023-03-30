@@ -3,20 +3,16 @@
 #include <unordered_map>
 #include <set>
 
-// Writing out all the key value pairs in the map by hand means there is
-// a bit more code, however, it also makes it very easy to understand.
-const std::unordered_map<char, unsigned short> digits = {
-        {'0', 0},
-        {'1', 1},
-        {'2', 2},
-        {'3', 3},
-        {'4', 4},
-        {'5', 5},
-        {'6', 6},
-        {'7', 7},
-        {'8', 8},
-        {'9', 9}
-};
+// Initialize const map using lambda.
+const std::unordered_map<char, unsigned short> digits = []() {
+    std::unordered_map<char, unsigned short> temp;
+
+    for (char c{'0'}; c <= '9'; c++) {
+        temp.emplace(c, c - '0');
+    }
+
+    return temp;
+}();
 
 int solution(std::string& str)
 /*
@@ -43,27 +39,11 @@ int solution(std::string& str)
     // -bit unsigned integer is an unsigned short (16 bits).
     std::stack<unsigned short> stack;
 
-    /*
-
-    std::unordered_map<char, unsigned short> numbers;
-
-    // https://en.cppreference.com/w/cpp/language/ascii
-    for (char c{'0'}; c <= '9'; c++) {
-        // https://stackoverflow.com/questions/5029840/convert-char-to-int-in-c-and-c
-        unsigned short n = c - '0';
-        numbers[c] = n;
-    }
-
-     */
-
     // The characters are processed one by one.
     for (auto& ch : str) {
         // If the current character is a digit ('0'-'9') the machine
         // pushes the value of that digit onto its stack.
         if (digits.count(ch)) {
-            // Could also use map::find and check the iterator != map.end().
-            // stack.push(digits[ch]);
-
             // Need to use map::at if the map is const.
             stack.push(digits.at(ch));
 
@@ -75,69 +55,33 @@ int solution(std::string& str)
         // Can only perform addition or multiplication if the size of
         // the stack is larger than 1 (i.e. there must be two numbers
         // in the stack that you can add or multiply together).
-        if (stack.size() <= 1 && (ch == '+' || ch == '*'))
+        if (stack.size() <= 1)
             return -1;
 
-        // If the current character is '+'...
+        // If the current character is '+' or '*' the machine pops the
+        // two topmost values from the stack...
+        unsigned short a = stack.top();
+        stack.pop();
+
+        unsigned short b = stack.top();
+        stack.pop();
+
         if (ch == '+') {
-            // the machine pops the two topmost values from the stack...
-            unsigned short a = stack.top();
-            stack.pop();
-
-            unsigned short b = stack.top();
-            stack.pop();
-
-            // adds them and pushes the result onto the stack.
+            // and adds them...
             stack.push(a + b);
         }
-
-        if (ch == '*') {
-            unsigned short a = stack.top();
-            stack.pop();
-
-            unsigned short b = stack.top();
-            stack.pop();
-
+        else if (ch == '*') {
+            // or multiplies them together.
             stack.push(a * b);
         }
-
-        // if (ch == '+' || ch == '*') {
-        //     if (stack.size() <= 1)
-        //         return -1;
-        //
-        //     unsigned short a = stack.top();
-        //     stack.pop();
-        //
-        //     unsigned short b = stack.top();
-        //     stack.pop();
-        //
-        //     if (ch == '+') {
-        //         stack.push(a + b);
-        //     }
-        //
-        //     if (ch == '*') {
-        //         stack.push(a * b);
-        //     }
-        // }
     }
 
     return stack.top();
 }
 
 int main() {
-    // Initialize const map using lambda.
-    const std::unordered_map<char, unsigned short> map = []() {
-        std::unordered_map<char, unsigned short> temp;
-
-        for (char c{'0'}; c <= '9'; c++) {
-            temp.emplace(c, c - '0');
-        }
-
-        return temp;
-    }();
-
-    for (auto& [key, value] : map)
-        std::cout << key << std::endl;
+    // for (auto& [key, value] : digits)
+    //     std::cout << key << std::endl;
 
     std::string characters = "13+62*7+*";
     // std::string characters = "11++";
