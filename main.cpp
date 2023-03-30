@@ -1,6 +1,22 @@
 #include <iostream>
 #include <stack>
 #include <unordered_map>
+#include <set>
+
+// Writing out all the key value pairs in the map by hand means there is
+// a bit more code, however, it also makes it very easy to understand.
+const std::unordered_map<char, unsigned short> digits = {
+        {'0', 0},
+        {'1', 1},
+        {'2', 2},
+        {'3', 3},
+        {'4', 4},
+        {'5', 5},
+        {'6', 6},
+        {'7', 7},
+        {'8', 8},
+        {'9', 9}
+};
 
 int solution(std::string& str)
 /*
@@ -8,35 +24,52 @@ int solution(std::string& str)
  * operations on an input string of numbers and operators.
  */
 {
-    // TODO: Include check that makes sure the string only contains the following characters.
-    // char characters [] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '*'};
+    // Check that the string only contains the following characters.
+    const std::set<char> characters = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '*'};
+
+    for (auto& ch : str) {
+        // set::find returns an iterator to the element, if val is found...
+        auto it = characters.find(ch);
+
+        // or set::end otherwise.
+        if (it == characters.end()) {
+            std::cout << "The string contains an invalid character." << std::endl;
+            return -1;
+        }
+    }
 
     // It contains a stack that can store an arbitrary number of
     // 12-bit unsigned integers. In C++ the closest type to a 12
     // -bit unsigned integer is an unsigned short (16 bits).
     std::stack<unsigned short> stack;
 
+    /*
+
     std::unordered_map<char, unsigned short> numbers;
 
-    unsigned short n = 0;
+    // https://en.cppreference.com/w/cpp/language/ascii
     for (char c{'0'}; c <= '9'; c++) {
-        numbers[c] = n++;
+        // https://stackoverflow.com/questions/5029840/convert-char-to-int-in-c-and-c
+        unsigned short n = c - '0';
+        numbers[c] = n;
     }
 
-    /*
-     * https://en.cppreference.com/w/cpp/language/ascii
-    for (char c{'0'}; c <= '9'; c++) {
-        std::cout << numbers[c] << std::endl;
-    }
      */
 
     // The characters are processed one by one.
     for (auto& ch : str) {
         // If the current character is a digit ('0'-'9') the machine
         // pushes the value of that digit onto its stack.
-        if (numbers.count(ch)) {
+        if (digits.count(ch)) {
             // Could also use map::find and check the iterator != map.end().
-            stack.push(numbers[ch]);
+            // stack.push(digits[ch]);
+
+            // Need to use map::at if the map is const.
+            stack.push(digits.at(ch));
+
+            // If a digit has been found skip the remaining
+            // portion of the range-for loop.
+            continue;
         }
 
         // Can only perform addition or multiplication if the size of
@@ -92,17 +125,26 @@ int solution(std::string& str)
 }
 
 int main() {
-    // https://stackoverflow.com/questions/5029840/convert-char-to-int-in-c-and-c
-    char ch = '7';
-    unsigned short i = ch - '0';
+    // Initialize const map using lambda.
+    const std::unordered_map<char, unsigned short> map = []() {
+        std::unordered_map<char, unsigned short> temp;
 
-    std::cout << "Converted char: " << i << std::endl;
+        for (char c{'0'}; c <= '9'; c++) {
+            temp.emplace(c, c - '0');
+        }
+
+        return temp;
+    }();
+
+    for (auto& [key, value] : map)
+        std::cout << key << std::endl;
 
     std::string characters = "13+62*7+*";
     // std::string characters = "11++";
 
     // TODO: Add unit tests
-    std::cout << "Result: " << solution(characters);
+    auto result = solution(characters);
+    std::cout << "Result: " << result;
 
     return 0;
 }
